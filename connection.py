@@ -24,10 +24,11 @@ cur = conn.cursor()
 # drop table if exists seeker
 
 
+city_list = ['Frankfurt', 'Dusseldorf', 'Hamburg']
 
-
-
-
+for val in city_list:
+    query = 'Insert into cities (cityname,country) values (%s,%s)'
+    cur.execute(query, (val,'Germany'))
 
 
 

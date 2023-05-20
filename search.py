@@ -163,7 +163,7 @@ def next_option_people(update, context):
     conn.commit()
     
     update.message.reply_text(
-        'Please enter start date(ex: mm/dd/yyyy  or Skip)',
+        'Please enter start date(ex: dd/mm/yyyy  or Skip)',
         reply_markup=ReplyKeyboardRemove()
     )
     return "next_option_start_date"
@@ -172,7 +172,7 @@ def next_option_people(update, context):
 
 def date_format_check(date_text):
     try:
-        datetime.strptime(date_text, '%m/%d/%Y')
+        datetime.strptime(date_text, '%d/%m/%Y')
     except ValueError:
         return False
     else:
@@ -188,7 +188,7 @@ def next_option_start_date(update, context):
             conn.commit()
         else:
             update.message.reply_text(
-                'Please enter valid date format(ex: mm/dd/yyyy  or Skip)',
+                'Please enter valid date format(ex:  dd/mm/yyyy  or Skip)',
                 reply_markup=ReplyKeyboardRemove()
             )
             return "next_option_start_date"
@@ -197,7 +197,7 @@ def next_option_start_date(update, context):
         cur.execute(query)
         conn.commit()
     update.message.reply_text(
-        'Please enter end date(ex: mm/dd/yyyy  or Skip)',
+        'Please enter end date(ex:  dd/mm/yyyy  or Skip)',
         reply_markup=ReplyKeyboardRemove()
     )
     return "next_option_end_date"
@@ -212,7 +212,7 @@ def next_option_end_date(update, context):
             conn.commit()
         else:
             update.message.reply_text(
-                'Please enter valid date format(ex: mm/dd/yyyy  or Skip)',
+                'Please enter valid date format(ex: dd/mm/yyyy  or Skip)',
                 reply_markup=ReplyKeyboardRemove()
             )
             return "next_option_end_date"
@@ -227,9 +227,9 @@ def next_option_end_date(update, context):
     query = f"select * from search where telegram_id = {update.message.from_user.id}"
     cur.execute(query)
     result = cur.fetchone()
-    rent = result[5] if result[5] != "Skip" else ""
-    start_date = result[6] if result[6] != "Skip" else ""
-    end_date = result[7] if result[7] != "Skip" else ""
+    rent = result[6] if result[6] != "Skip" else ""
+    start_date = result[7] if result[7] != "Skip" else ""
+    end_date = result[8] if result[8] != "Skip" else ""
     city = result[2] if result[2] != "Skip" else ""
     address = result[3] if result[3] != "Skip" else ""
     area = result[4] if result[4] != "Skip" else ""
@@ -237,16 +237,24 @@ def next_option_end_date(update, context):
     if city !="" and city != None and city !="None" and city != "none" and city != "Skip":
         query=query+"city ='"+city+"'"
     if rent !="" and rent != None and rent !="None" and rent != "none"and rent != "Skip":
-        query=query+"and (rent<='"+rent+"'"
+        query=query+"and rent<='"+rent+"'"
     if area !="" and area != None and area !="None" and area != "none"and area != "Skip":
         query=query+" or area='"+area+"'"
     if start_date !="" and start_date != None and start_date !="None" and start_date != "none"and start_date != "Skip":
-        query=query+" or start_date='"+start_date+"'"
+        # date_format = "%Y-%m-%d"
+        # date = datetime.strptime(start_date, date_format)
+        # month_start_date = date.replace(day=1)
+        query=query+"and start_date='"+start_date+"'"
     if end_date !="" and end_date != None and end_date !="None" and end_date != "none"and end_date != "Skip":
-        query=query+" or end_date='"+end_date+"' )"
-    query = query + " and created_at >='" + str((datetime.now() - timedelta(days=30))) + "'"
-    cur.execute(query)
-    result = cur.fetchall()
+        query=query+" and end_date='"+end_date +"'"
+    try:
+        query = query + " and created_at >='" + str((datetime.now() - timedelta(days=30))) + "'"
+        print(query)
+        cur.execute(query)
+        result = cur.fetchall()
+    except Exception as e:
+        print(e)
+        result = []
     if len(result) == 0:
         update.message.reply_text(
             'No result found',
@@ -349,14 +357,3 @@ def manual_search_city(update, context):
             reply_markup=ReplyKeyboardMarkup([['Manual']])
         )
         return "search_type"
-    # clear keyboard
-
-    update.message.reply_text(
-        'Thank you for using our service \n\n',
-        reply_markup=ReplyKeyboardRemove()
-    )
-    update.message.reply_text(
-        'Start a new conversation by typing /start',
-        reply_markup=ReplyKeyboardRemove()
-    )
-    return ConversationHandler.END
